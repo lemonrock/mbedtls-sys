@@ -1,0 +1,215 @@
+#!/usr/bin/env sh
+# This file is part of mbedtls-sys. It is subject to the license terms in the COPYRIGHT file found in the top-level directory of this distribution and at https://raw.githubusercontent.com/lemonrock/mbedtls-sys/master/COPYRIGHT. No part of mbedtls-sys, including this file, may be copied, modified, propagated, or distributed except according to the terms contained in the COPYRIGHT file.
+# Copyright © 2016 The developers of mbedtls-sys. See the COPYRIGHT file in the top-level directory of this distribution and at https://raw.githubusercontent.com/lemonrock/mbedtls-sys/master/COPYRIGHT.
+
+
+set -e
+set -u
+set -f
+
+
+_program_path_find()
+{
+    if [ "${_program_fattening_program_path+set}" = 'set' ]; then
+        printf '%s\n' "$_program_fattening_program_path"
+
+    elif [ "${0%/*}" = "$0" ]; then
+
+        # We've been invoked by the interpreter as, say, bash program
+        if [ -r "$0" ]; then
+            pwd -P
+        # Clutching at straws; probably run via a download, anonymous script, etc, weird execve, etc
+        else
+            printf '\n'
+        fi
+
+    else
+
+        # We've been invoked with a relative or absolute path (also when invoked via PATH in a shell)
+
+        _program_path_find_parentPath()
+        {
+            parentPath="${scriptPath%/*}"
+            if [ -z "$parentPath" ]; then
+                parentPath='/'
+            fi
+            cd "$parentPath" 1>/dev/null
+        }
+
+        # pdksh / mksh have problems with unsetting a variable that was never set...
+        if [ "${CDPATH+set}" = 'set' ]; then
+            unset CDPATH
+        fi
+
+        if command -v realpath 1>/dev/null 2>/dev/null; then
+            (
+                scriptPath="$(realpath "$0")"
+
+                _program_path_find_parentPath
+                pwd -P
+            )
+        elif command -v readlink 1>/dev/null 2>/dev/null; then
+            (
+                scriptPath="$0"
+
+                while [ -L "$scriptPath" ]
+                do
+                    _program_path_find_parentPath
+                    scriptPath="$(readlink "$scriptPath")"
+                done
+
+                _program_path_find_parentPath
+                pwd -P
+            )
+        else
+            # This approach will fail in corner cases where the script itself is a symlink in a path not parallel with the concrete script
+            (
+                scriptPath="$0"
+
+                _program_path_find_parentPath
+                pwd -P
+            )
+        fi
+
+    fi
+}
+
+generate_macos_cargoInstall()
+{
+	local crate="$1"
+	shift 1
+	
+	if cargo install --list | grep -v '^ ' | awk '{ print $1 }' | grep -q '^'"$crate"'$'; then
+		return 0
+	fi
+	
+	cargo install "$@" "$program"
+}
+
+generate_macosx_main()
+{
+	local _program_path="$(_program_path_find)"
+	
+	brew install llvm --with-shared-libs
+	
+	brew install mbedtls
+	
+	LLVM_CONFIG_PATH=/usr/local/opt/llvm/bin/llvm-config LIBCLANG_PATH=/usr/local/opt/llvm/lib LIBCLANG_STATIC_PATH=/usr/local/opt/llvm/lib generate_macos_cargoInstall bindgen
+	
+	generate_macos_cargoInstall rustfmt
+	
+	local temporaryIncludeFolder="$_program_path"/mbedtls
+	rm -rf "$temporaryIncludeFolder"
+	mkdir -m 0755 -p "$temporaryIncludeFolder"
+	rsync --quiet --archive "$_program_path"/include-fixes/ /usr/local/include/mbedtls/ "$temporaryIncludeFolder"/
+	
+	cd "$temporaryIncludeFolder" 1>/dev/null 2>/dev/null
+		
+		set --
+		local wantedHeaderFile
+		set +f
+		for wantedHeaderFile in *.h
+		do
+			set -f
+			set -- "$@" --match="$wantedHeaderFile"
+		done
+		set -f
+		
+	cd - 1>/dev/null 2>/dev/null
+	
+	local outputFile="$_program_path"/../src/lib.rs
+	
+	# There are some minor issues with bindgen's generated code
+	# - Debug is not applicable to mbedtls_threading_mutex_t
+	# - mbedtls_threading_mutex_t is not Windows-compatible as it uses pthread_mutex_t
+	# - there is a uint128 required, but only on 64-bit Unix; 32-bit Unix and 32/64-bit Windows use a uint64
+	
+	# Not needed in this code base:-
+	#  #![allow(dead_code)]
+	#  #![allow(non_upper_case_globals)]
+	#  #![allow(non_snake_case)]
+	
+	{
+		cat <<-'EOF'
+			// This file is part of mbedtls-sys. It is subject to the license terms in the COPYRIGHT file found in the top-level directory of this distribution and at https://raw.githubusercontent.com/lemonrock/mbedtls-sys/master/COPYRIGHT. No part of mbedtls-sys, including this file, may be copied, modified, propagated, or distributed except according to the terms contained in the COPYRIGHT file.
+			// Copyright © 2016 The developers of mbedtls-sys. See the COPYRIGHT file in the top-level directory of this distribution and at https://raw.githubusercontent.com/lemonrock/mbedtls-sys/master/COPYRIGHT.
+			
+			
+			#![allow(non_camel_case_types)]
+			
+			extern crate core;
+			use ::core::default::Default;
+			use ::core::option::Option;
+			use ::core::mem::zeroed;
+			use ::core::mem::transmute;
+			use ::core::clone::Clone;
+			use ::std::os::raw::c_char;
+			use ::std::os::raw::c_uchar;
+			use ::std::os::raw::c_short;
+			use ::std::os::raw::c_ushort;
+			use ::std::os::raw::c_int;
+			use ::std::os::raw::c_uint;
+			use ::std::os::raw::c_void;
+			extern crate libc;
+			use self::libc::size_t;
+			use self::libc::time_t;
+			use self::libc::int64_t;
+			use self::libc::uint16_t;
+			use self::libc::uint32_t;
+			use self::libc::uint64_t;
+			use self::libc::FILE;
+			// Windows will have problems here
+			use self::libc::pthread_mutex_t;
+		EOF
+		
+		# Note: tac does not exist on Mac OS X
+		tac()
+		{
+			tail -r -- "$@"
+		}
+		
+		# First sed lines explanation:-
+		# 1 - remove bindgen comment
+		# 2 - remove multiline allow that (a) rustfmt can't format and (b) is no longer the first item in the file because of the use statements above and (c) is overly broad
+		# 3 to 7 - remove prefixes in favour of use statements above for readability
+		# 8 - suppress Copy warnings for empty enums which are types for opaque structs, format them (rustfmt can't)
+		# 9 - make uint128_t private and only exist on 64-bit unix platforms
+		# 10 - adjust mbedtls_t_udbl so that it is correctly sized on Windows and 32-bit unix (note that it is uint64_t even on 64-bit Windows)
+		# Second sed lines explanation - remove lines BEFORE expression:-
+		# 1 - remove #[derive(Debug)] from pub struct mbedtls_threading_mutex_t, as it contains a field of type pthread_mutex_t on Unix, which is opaque (via previous line sed expression)
+		# 2 - remove #[derive(Debug)] from pub struct mbedtls_rsa_context, as it contains a field of type mbedtls_threading_mutex_t (via previous line sed expression)\
+		# Third sed lines explanation - remove lines BEFORE expression:-
+		# 1 - add #[allow(missing_debug_implementations)] instead for pub struct mbedtls_threading_mutex_t
+		# 2 - add #[allow(missing_debug_implementations)] instead for pub struct mbedtls_rsa_context
+		# 3 - add #[allow(missing_debug_implementations)] as contains a fixed-size array for pub struct mbedtls_ssl_premaster_secret
+		# 4 - add #[allow(missing_debug_implementations)] as contains a fixed-size array for pub struct mbedtls_ssl_session
+		local newline='\'$'\n'
+		DYLD_LIBRARY_PATH=/usr/local/opt/llvm/lib CLANG_PATH=/usr/local/opt/llvm/bin/clang bindgen "$@" --convert-macros --use-core --ctypes-prefix=XXX "$temporaryIncludeFolder"/ssl.h -- -U__BLOCKS__ | \
+		sed \
+			-e '/automatically generated by rust-bindgen/d' \
+			-e '/#!\[allow(dead_code,/,/non_snake_case/d' \
+			-e 's/::XXX:://g' \
+			-e 's/::core::clone:://g' \
+			-e 's/::core::option:://g' \
+			-e 's/::core::mem:://g' \
+			-e 's/::core::default:://g' \
+			-e 's/^pub enum \(.*\) { }/#[allow(missing_copy_implementations)]'"$newline"'#[derive(Debug)]'"$newline"'pub enum \1'"$newline"'{'"$newline"'}/g' \
+			-e 's/^pub struct u128/#[cfg(all(unix, target_pointer_width = "64"))]'"$newline"'pub struct u128/g' \
+			-e 's/^pub type mbedtls_t_udbl = u128;$/#[cfg(windows)] pub type mbedtls_t_udbl = uint64_t;'"$newline"'#[cfg(all(unix, target_pointer_width = "64"))] pub type mbedtls_t_udbl = u128;'"$newline"'#[cfg(all(unix, target_pointer_width = "32"))] pub type mbedtls_t_udbl = uint64_t;/g' \
+		| \
+		tac | \
+			sed \
+				-e '/pub struct mbedtls_threading_mutex_t {/{n; d;}' \
+				-e '/pub struct mbedtls_rsa_context {/{n; d;}' \
+				| \
+			sed \
+				-e 's/pub struct mbedtls_threading_mutex_t {/pub struct mbedtls_threading_mutex_t {'"$newline"'#[allow(missing_debug_implementations)]/g' \
+				-e 's/pub struct mbedtls_rsa_context {/pub struct mbedtls_rsa_context {'"$newline"'#[allow(missing_debug_implementations)]/g' \
+				-e 's/pub struct mbedtls_ssl_premaster_secret {/pub struct mbedtls_ssl_premaster_secret {'"$newline"'#[allow(missing_debug_implementations)]/g' \
+				-e 's/pub struct mbedtls_ssl_session {/pub struct mbedtls_ssl_session {'"$newline"'#[allow(missing_debug_implementations)]/g' \
+				| \
+		tac
+	} | rustfmt --config-path "$_program_path"/.. >"$outputFile"
+}
+
+generate_macosx_main "$@"
