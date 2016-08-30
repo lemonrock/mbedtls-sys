@@ -573,9 +573,13 @@ pub const MBEDTLS_TLS_EXT_RENEGOTIATION_INFO: c_ushort = 65281;
 pub const MBEDTLS_PSK_MAX_LEN: c_uchar = 32;
 pub const MBEDTLS_SSL_CHANNEL_OUTBOUND: c_uchar = 0;
 pub const MBEDTLS_SSL_CHANNEL_INBOUND: c_uchar = 1;
+
 pub type mbedtls_iso_c_forbids_empty_translation_units = c_int;
+
 pub type mbedtls_mpi_sint = int64_t;
+
 pub type mbedtls_mpi_uint = uint64_t;
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -585,6 +589,7 @@ pub struct u128
 	pub a: uint64_t,
 	pub b: uint64_t,
 }
+
 impl Default for u128
 {
 	fn default() -> Self
@@ -592,12 +597,16 @@ impl Default for u128
 		unsafe { zeroed() }
 	}
 }
+
 #[cfg(windows)]
 pub type mbedtls_t_udbl = uint64_t;
+
 #[cfg(all(unix, target_pointer_width = "64"))]
 pub type mbedtls_t_udbl = u128;
+
 #[cfg(all(unix, target_pointer_width = "32"))]
 pub type mbedtls_t_udbl = uint64_t;
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -607,6 +616,7 @@ pub struct mbedtls_mpi
 	pub n: size_t,
 	pub p: *mut mbedtls_mpi_uint,
 }
+
 impl Default for mbedtls_mpi
 {
 	fn default() -> Self
@@ -614,6 +624,7 @@ impl Default for mbedtls_mpi
 		unsafe { zeroed() }
 	}
 }
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -633,6 +644,7 @@ pub enum mbedtls_ecp_group_id
 	MBEDTLS_ECP_DP_SECP224K1 = 11,
 	MBEDTLS_ECP_DP_SECP256K1 = 12,
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -643,6 +655,7 @@ pub struct mbedtls_ecp_curve_info
 	pub bit_size: uint16_t,
 	pub name: *const c_char,
 }
+
 impl Default for mbedtls_ecp_curve_info
 {
 	fn default() -> Self
@@ -650,6 +663,7 @@ impl Default for mbedtls_ecp_curve_info
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -659,6 +673,7 @@ pub struct mbedtls_ecp_point
 	pub Y: mbedtls_mpi,
 	pub Z: mbedtls_mpi,
 }
+
 impl Default for mbedtls_ecp_point
 {
 	fn default() -> Self
@@ -666,6 +681,7 @@ impl Default for mbedtls_ecp_point
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -687,6 +703,7 @@ pub struct mbedtls_ecp_group
 	pub T: *mut mbedtls_ecp_point,
 	pub T_size: size_t,
 }
+
 impl Default for mbedtls_ecp_group
 {
 	fn default() -> Self
@@ -694,6 +711,7 @@ impl Default for mbedtls_ecp_group
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -703,6 +721,7 @@ pub struct mbedtls_ecp_keypair
 	pub d: mbedtls_mpi,
 	pub Q: mbedtls_ecp_point,
 }
+
 impl Default for mbedtls_ecp_keypair
 {
 	fn default() -> Self
@@ -710,6 +729,7 @@ impl Default for mbedtls_ecp_keypair
 		unsafe { zeroed() }
 	}
 }
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -726,10 +746,13 @@ pub enum mbedtls_md_type_t
 	MBEDTLS_MD_SHA512 = 8,
 	MBEDTLS_MD_RIPEMD160 = 9,
 }
+
 #[allow(missing_copy_implementations)]
 #[derive(Debug)]
-pub enum mbedtls_md_info_t {
+pub enum mbedtls_md_info_t
+{
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -739,6 +762,7 @@ pub struct mbedtls_md_context_t
 	pub md_ctx: *mut c_void,
 	pub hmac_ctx: *mut c_void,
 }
+
 impl Default for mbedtls_md_context_t
 {
 	fn default() -> Self
@@ -746,6 +770,7 @@ impl Default for mbedtls_md_context_t
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[allow(missing_debug_implementations)]
@@ -755,6 +780,7 @@ pub struct mbedtls_threading_mutex_t
 	pub is_valid: c_char,
 	_bindgen_padding_0_: [u8; 7usize],
 }
+
 impl Default for mbedtls_threading_mutex_t
 {
 	fn default() -> Self
@@ -762,6 +788,7 @@ impl Default for mbedtls_threading_mutex_t
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[allow(missing_debug_implementations)]
@@ -786,6 +813,7 @@ pub struct mbedtls_rsa_context
 	pub hash_id: c_int,
 	pub mutex: mbedtls_threading_mutex_t,
 }
+
 impl Default for mbedtls_rsa_context
 {
 	fn default() -> Self
@@ -793,7 +821,9 @@ impl Default for mbedtls_rsa_context
 		unsafe { zeroed() }
 	}
 }
+
 pub type mbedtls_ecdsa_context = mbedtls_ecp_keypair;
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -807,6 +837,7 @@ pub enum mbedtls_pk_type_t
 	MBEDTLS_PK_RSA_ALT = 5,
 	MBEDTLS_PK_RSASSA_PSS = 6,
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -815,6 +846,7 @@ pub struct mbedtls_pk_rsassa_pss_options
 	pub mgf1_hash_id: mbedtls_md_type_t,
 	pub expected_salt_len: c_int,
 }
+
 impl Default for mbedtls_pk_rsassa_pss_options
 {
 	fn default() -> Self
@@ -822,6 +854,7 @@ impl Default for mbedtls_pk_rsassa_pss_options
 		unsafe { zeroed() }
 	}
 }
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -831,6 +864,7 @@ pub enum mbedtls_pk_debug_type
 	MBEDTLS_PK_DEBUG_MPI = 1,
 	MBEDTLS_PK_DEBUG_ECP = 2,
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -840,6 +874,7 @@ pub struct mbedtls_pk_debug_item
 	pub name: *const c_char,
 	pub value: *mut c_void,
 }
+
 impl Default for mbedtls_pk_debug_item
 {
 	fn default() -> Self
@@ -847,10 +882,13 @@ impl Default for mbedtls_pk_debug_item
 		unsafe { zeroed() }
 	}
 }
+
 #[allow(missing_copy_implementations)]
 #[derive(Debug)]
-pub enum mbedtls_pk_info_t {
+pub enum mbedtls_pk_info_t
+{
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -859,6 +897,7 @@ pub struct mbedtls_pk_context
 	pub pk_info: *const mbedtls_pk_info_t,
 	pub pk_ctx: *mut c_void,
 }
+
 impl Default for mbedtls_pk_context
 {
 	fn default() -> Self
@@ -866,9 +905,13 @@ impl Default for mbedtls_pk_context
 		unsafe { zeroed() }
 	}
 }
+
 pub type mbedtls_pk_rsa_alt_decrypt_func = Option<unsafe extern "C" fn(ctx: *mut c_void, mode: c_int, olen: *mut size_t, input: *const c_uchar, output: *mut c_uchar, output_max_len: size_t) -> c_int>;
+
 pub type mbedtls_pk_rsa_alt_sign_func = Option<unsafe extern "C" fn(ctx: *mut c_void, f_rng: Option<unsafe extern "C" fn(arg1: *mut c_void, arg2: *mut c_uchar, arg3: size_t) -> c_int>, p_rng: *mut c_void, mode: c_int, md_alg: mbedtls_md_type_t, hashlen: c_uint, hash: *const c_uchar, sig: *mut c_uchar) -> c_int>;
+
 pub type mbedtls_pk_rsa_alt_key_len_func = Option<unsafe extern "C" fn(ctx: *mut c_void) -> size_t>;
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -883,6 +926,7 @@ pub enum mbedtls_cipher_id_t
 	MBEDTLS_CIPHER_ID_BLOWFISH = 6,
 	MBEDTLS_CIPHER_ID_ARC4 = 7,
 }
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -938,6 +982,7 @@ pub enum mbedtls_cipher_type_t
 	MBEDTLS_CIPHER_CAMELLIA_192_CCM = 47,
 	MBEDTLS_CIPHER_CAMELLIA_256_CCM = 48,
 }
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -953,6 +998,7 @@ pub enum mbedtls_cipher_mode_t
 	MBEDTLS_MODE_STREAM = 7,
 	MBEDTLS_MODE_CCM = 8,
 }
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -964,6 +1010,7 @@ pub enum mbedtls_cipher_padding_t
 	MBEDTLS_PADDING_ZEROS = 3,
 	MBEDTLS_PADDING_NONE = 4,
 }
+
 #[derive(Copy, Clone)]
 #[repr(i32)]
 #[derive(Debug)]
@@ -973,6 +1020,7 @@ pub enum mbedtls_operation_t
 	MBEDTLS_DECRYPT = 0,
 	MBEDTLS_ENCRYPT = 1,
 }
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -983,10 +1031,13 @@ pub enum Enum_Unnamed1
 	MBEDTLS_KEY_LENGTH_DES_EDE = 128,
 	MBEDTLS_KEY_LENGTH_DES_EDE3 = 192,
 }
+
 #[allow(missing_copy_implementations)]
 #[derive(Debug)]
-pub enum mbedtls_cipher_base_t {
+pub enum mbedtls_cipher_base_t
+{
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1001,6 +1052,7 @@ pub struct mbedtls_cipher_info_t
 	pub block_size: c_uint,
 	pub base: *const mbedtls_cipher_base_t,
 }
+
 impl Default for mbedtls_cipher_info_t
 {
 	fn default() -> Self
@@ -1008,6 +1060,7 @@ impl Default for mbedtls_cipher_info_t
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1024,6 +1077,7 @@ pub struct mbedtls_cipher_context_t
 	pub iv_size: size_t,
 	pub cipher_ctx: *mut c_void,
 }
+
 impl Default for mbedtls_cipher_context_t
 {
 	fn default() -> Self
@@ -1031,6 +1085,7 @@ impl Default for mbedtls_cipher_context_t
 		unsafe { zeroed() }
 	}
 }
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -1049,6 +1104,7 @@ pub enum mbedtls_key_exchange_type_t
 	MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA = 10,
 	MBEDTLS_KEY_EXCHANGE_ECJPAKE = 11,
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1066,6 +1122,7 @@ pub struct mbedtls_ssl_ciphersuite_t
 	pub flags: c_uchar,
 	_bindgen_padding_0_: [u8; 3usize],
 }
+
 impl Default for mbedtls_ssl_ciphersuite_t
 {
 	fn default() -> Self
@@ -1073,6 +1130,7 @@ impl Default for mbedtls_ssl_ciphersuite_t
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1082,6 +1140,7 @@ pub struct mbedtls_asn1_buf
 	pub len: size_t,
 	pub p: *mut c_uchar,
 }
+
 impl Default for mbedtls_asn1_buf
 {
 	fn default() -> Self
@@ -1089,6 +1148,7 @@ impl Default for mbedtls_asn1_buf
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1098,6 +1158,7 @@ pub struct mbedtls_asn1_bitstring
 	pub unused_bits: c_uchar,
 	pub p: *mut c_uchar,
 }
+
 impl Default for mbedtls_asn1_bitstring
 {
 	fn default() -> Self
@@ -1105,6 +1166,7 @@ impl Default for mbedtls_asn1_bitstring
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1113,6 +1175,7 @@ pub struct mbedtls_asn1_sequence
 	pub buf: mbedtls_asn1_buf,
 	pub next: *mut mbedtls_asn1_sequence,
 }
+
 impl Default for mbedtls_asn1_sequence
 {
 	fn default() -> Self
@@ -1120,6 +1183,7 @@ impl Default for mbedtls_asn1_sequence
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1131,6 +1195,7 @@ pub struct mbedtls_asn1_named_data
 	pub next_merged: c_uchar,
 	_bindgen_padding_0_: [u8; 7usize],
 }
+
 impl Default for mbedtls_asn1_named_data
 {
 	fn default() -> Self
@@ -1138,10 +1203,15 @@ impl Default for mbedtls_asn1_named_data
 		unsafe { zeroed() }
 	}
 }
+
 pub type mbedtls_x509_buf = mbedtls_asn1_buf;
+
 pub type mbedtls_x509_bitstring = mbedtls_asn1_bitstring;
+
 pub type mbedtls_x509_name = mbedtls_asn1_named_data;
+
 pub type mbedtls_x509_sequence = mbedtls_asn1_sequence;
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1154,6 +1224,7 @@ pub struct mbedtls_x509_time
 	pub min: c_int,
 	pub sec: c_int,
 }
+
 impl Default for mbedtls_x509_time
 {
 	fn default() -> Self
@@ -1161,6 +1232,7 @@ impl Default for mbedtls_x509_time
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1172,6 +1244,7 @@ pub struct mbedtls_x509_crl_entry
 	pub entry_ext: mbedtls_x509_buf,
 	pub next: *mut mbedtls_x509_crl_entry,
 }
+
 impl Default for mbedtls_x509_crl_entry
 {
 	fn default() -> Self
@@ -1179,6 +1252,7 @@ impl Default for mbedtls_x509_crl_entry
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1201,6 +1275,7 @@ pub struct mbedtls_x509_crl
 	pub sig_opts: *mut c_void,
 	pub next: *mut mbedtls_x509_crl,
 }
+
 impl Default for mbedtls_x509_crl
 {
 	fn default() -> Self
@@ -1208,6 +1283,7 @@ impl Default for mbedtls_x509_crl
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1241,6 +1317,7 @@ pub struct mbedtls_x509_crt
 	pub sig_opts: *mut c_void,
 	pub next: *mut mbedtls_x509_crt,
 }
+
 impl Default for mbedtls_x509_crt
 {
 	fn default() -> Self
@@ -1248,6 +1325,7 @@ impl Default for mbedtls_x509_crt
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1258,6 +1336,7 @@ pub struct mbedtls_x509_crt_profile
 	pub allowed_curves: uint32_t,
 	pub rsa_min_bitlen: uint32_t,
 }
+
 impl Default for mbedtls_x509_crt_profile
 {
 	fn default() -> Self
@@ -1265,6 +1344,7 @@ impl Default for mbedtls_x509_crt_profile
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1281,6 +1361,7 @@ pub struct mbedtls_x509write_cert
 	pub not_after: [c_char; 16usize],
 	pub extensions: *mut mbedtls_asn1_named_data,
 }
+
 impl Default for mbedtls_x509write_cert
 {
 	fn default() -> Self
@@ -1288,6 +1369,7 @@ impl Default for mbedtls_x509write_cert
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1305,6 +1387,7 @@ pub struct mbedtls_dhm_context
 	pub Vf: mbedtls_mpi,
 	pub pX: mbedtls_mpi,
 }
+
 impl Default for mbedtls_dhm_context
 {
 	fn default() -> Self
@@ -1312,6 +1395,7 @@ impl Default for mbedtls_dhm_context
 		unsafe { zeroed() }
 	}
 }
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -1320,6 +1404,7 @@ pub enum mbedtls_ecdh_side
 	MBEDTLS_ECDH_OURS = 0,
 	MBEDTLS_ECDH_THEIRS = 1,
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1335,6 +1420,7 @@ pub struct mbedtls_ecdh_context
 	pub Vf: mbedtls_ecp_point,
 	pub _d: mbedtls_mpi,
 }
+
 impl Default for mbedtls_ecdh_context
 {
 	fn default() -> Self
@@ -1342,7 +1428,9 @@ impl Default for mbedtls_ecdh_context
 		unsafe { zeroed() }
 	}
 }
+
 pub type mbedtls_time_t = time_t;
+
 #[repr(C)]
 #[derive(Copy)]
 #[allow(missing_debug_implementations)]
@@ -1350,6 +1438,7 @@ pub struct mbedtls_ssl_premaster_secret
 {
 	pub _bindgen_data_: [u8; 1060usize],
 }
+
 impl mbedtls_ssl_premaster_secret
 {
 	pub unsafe fn _pms_rsa(&mut self) -> *mut [c_uchar; 48usize]
@@ -1388,6 +1477,7 @@ impl mbedtls_ssl_premaster_secret
 		transmute(raw.offset(0))
 	}
 }
+
 impl Clone for mbedtls_ssl_premaster_secret
 {
 	fn clone(&self) -> Self
@@ -1395,6 +1485,7 @@ impl Clone for mbedtls_ssl_premaster_secret
 		*self
 	}
 }
+
 impl Default for mbedtls_ssl_premaster_secret
 {
 	fn default() -> Self
@@ -1402,6 +1493,7 @@ impl Default for mbedtls_ssl_premaster_secret
 		unsafe { zeroed() }
 	}
 }
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -1427,27 +1519,41 @@ pub enum mbedtls_ssl_states
 	MBEDTLS_SSL_SERVER_NEW_SESSION_TICKET = 17,
 	MBEDTLS_SSL_SERVER_HELLO_VERIFY_REQUEST_SENT = 18,
 }
+
 pub type mbedtls_ssl_send_t = Option<unsafe extern "C" fn(ctx: *mut c_void, buf: *const c_uchar, len: size_t) -> c_int>;
+
 pub type mbedtls_ssl_recv_t = Option<unsafe extern "C" fn(ctx: *mut c_void, buf: *mut c_uchar, len: size_t) -> c_int>;
+
 pub type mbedtls_ssl_recv_timeout_t = Option<unsafe extern "C" fn(ctx: *mut c_void, buf: *mut c_uchar, len: size_t, timeout: uint32_t) -> c_int>;
+
 pub type mbedtls_ssl_set_timer_t = Option<unsafe extern "C" fn(ctx: *mut c_void, int_ms: uint32_t, fin_ms: uint32_t)>;
+
 pub type mbedtls_ssl_get_timer_t = Option<unsafe extern "C" fn(ctx: *mut c_void) -> c_int>;
+
 #[allow(missing_copy_implementations)]
 #[derive(Debug)]
-pub enum mbedtls_ssl_transform {
+pub enum mbedtls_ssl_transform
+{
 }
+
 #[allow(missing_copy_implementations)]
 #[derive(Debug)]
-pub enum mbedtls_ssl_handshake_params {
+pub enum mbedtls_ssl_handshake_params
+{
 }
+
 #[allow(missing_copy_implementations)]
 #[derive(Debug)]
-pub enum mbedtls_ssl_key_cert {
+pub enum mbedtls_ssl_key_cert
+{
 }
+
 #[allow(missing_copy_implementations)]
 #[derive(Debug)]
-pub enum mbedtls_ssl_flight_item {
+pub enum mbedtls_ssl_flight_item
+{
 }
+
 #[repr(C)]
 #[derive(Copy)]
 #[allow(missing_debug_implementations)]
@@ -1467,6 +1573,7 @@ pub struct mbedtls_ssl_session
 	pub mfl_code: c_uchar,
 	pub encrypt_then_mac: c_int,
 }
+
 impl Clone for mbedtls_ssl_session
 {
 	fn clone(&self) -> Self
@@ -1474,6 +1581,7 @@ impl Clone for mbedtls_ssl_session
 		*self
 	}
 }
+
 impl Default for mbedtls_ssl_session
 {
 	fn default() -> Self
@@ -1481,6 +1589,7 @@ impl Default for mbedtls_ssl_session
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1530,6 +1639,7 @@ pub struct mbedtls_ssl_config
 	pub min_minor_ver: c_uchar,
 	pub _bindgen_bitfield_1_: c_uint,
 }
+
 impl Default for mbedtls_ssl_config
 {
 	fn default() -> Self
@@ -1537,6 +1647,7 @@ impl Default for mbedtls_ssl_config
 		unsafe { zeroed() }
 	}
 }
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1597,6 +1708,7 @@ pub struct mbedtls_ssl_context
 	pub secure_renegotiation: c_int,
 	_bindgen_padding_0_: [u8; 4usize],
 }
+
 impl Default for mbedtls_ssl_context
 {
 	fn default() -> Self
@@ -1604,11 +1716,17 @@ impl Default for mbedtls_ssl_context
 		unsafe { zeroed() }
 	}
 }
+
 pub type mbedtls_ssl_ticket_write_t = Option<unsafe extern "C" fn(p_ticket: *mut c_void, session: *const mbedtls_ssl_session, start: *mut c_uchar, end: *const c_uchar, tlen: *mut size_t, lifetime: *mut uint32_t) -> c_int>;
+
 pub type mbedtls_ssl_ticket_parse_t = Option<unsafe extern "C" fn(p_ticket: *mut c_void, session: *mut mbedtls_ssl_session, buf: *mut c_uchar, len: size_t) -> c_int>;
+
 pub type mbedtls_ssl_cookie_write_t = Option<unsafe extern "C" fn(ctx: *mut c_void, p: *mut *mut c_uchar, end: *mut c_uchar, info: *const c_uchar, ilen: size_t) -> c_int>;
+
 pub type mbedtls_ssl_cookie_check_t = Option<unsafe extern "C" fn(ctx: *mut c_void, cookie: *const c_uchar, clen: size_t, info: *const c_uchar, ilen: size_t) -> c_int>;
-extern "C" {
+
+extern "C"
+{
 	pub static mut mbedtls_mutex_init: Option<unsafe extern "C" fn(mutex: *mut mbedtls_threading_mutex_t)>;
 	pub static mut mbedtls_mutex_free: Option<unsafe extern "C" fn(mutex: *mut mbedtls_threading_mutex_t)>;
 	pub static mut mbedtls_mutex_lock: Option<unsafe extern "C" fn(mutex: *mut mbedtls_threading_mutex_t) -> c_int>;
@@ -1625,7 +1743,9 @@ extern "C" {
 	pub static mut mbedtls_ssl_hw_record_read: Option<unsafe extern "C" fn(ssl: *mut mbedtls_ssl_context) -> c_int>;
 	pub static mut mbedtls_ssl_hw_record_finish: Option<unsafe extern "C" fn(ssl: *mut mbedtls_ssl_context) -> c_int>;
 }
-extern "C" {
+
+extern "C"
+{
 	pub fn mbedtls_mpi_init(X: *mut mbedtls_mpi);
 	pub fn mbedtls_mpi_free(X: *mut mbedtls_mpi);
 	pub fn mbedtls_mpi_grow(X: *mut mbedtls_mpi, nblimbs: size_t) -> c_int;
@@ -1970,3 +2090,4 @@ extern "C" {
 	pub fn mbedtls_ssl_session_init(session: *mut mbedtls_ssl_session);
 	pub fn mbedtls_ssl_session_free(session: *mut mbedtls_ssl_session);
 }
+
