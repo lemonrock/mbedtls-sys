@@ -3,8 +3,8 @@
 
 [package]
 name = "mbedtls-sys"
-description = "mbedtls-sys"
-keywords = ["mbedtls-sys"]
+description = "A rust FFI wrapper around mbedtls"
+keywords = ["tls", "ssl", "dtls", "mbed", "mbedtls", "hash", "cryptography", "x509", "pki", "pkcs", "mbedtls-sys"]
 license = "MIT"
 authors = ["Raphael Cohn <raphael.cohn@stormmq.com>"]
 documentation = "https://github.com/lemonrock/mbedtls-sys/blob/master/README.md"
@@ -14,8 +14,8 @@ exclude = ["*"]
 include = ["README.md", "LICENSE", "COPYRIGHT", "src/**/*.rs", "benches/**/*.rs", "examples/**/*.rs", "tests/**/*.rs", "Cargo.toml", "rustfmt.toml", "clippy.toml"]
 # Relative to Cargo.toml
 readme = "README.md"
-publish = false
-version = "0.0.0"
+publish = true
+version = "0.0.1"
 
 [profile.release]
 opt-level = 3

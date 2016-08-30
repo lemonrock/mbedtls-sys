@@ -5,12 +5,24 @@
 
 [![Clippy Linting Result](https://clippy.bashy.io/github/lemonrock/mbedtls-sys/master/badge.svg?style=plastic)](https://clippy.bashy.io/github/lemonrock/mbedtls-sys/master/log) [![](https://img.shields.io/badge/Code%20Style-rustfmt-brightgreen.svg?style=plastic)](https://github.com/rust-lang-nursery/rustfmt#configuring-rustfmt)
 
-[mbedtls-sys] is a rust crate that has bindings to the [mbedtls] C library.
+[mbedtls-sys] is a rust crate that has bindings to the [mbedtls] C library. It currently generates them for version 2.3.0.
 
 
 ## Licensing
 
 The license for this project is MIT.
+
+
+## Recompilation
+
+To recompile, use `bindgen/generate-macosx`. This only works on Mac OS X, and you will need Homebrew installed (as `brew`). It assumes `brew` and `cargo` are in your path, and will install `bindgen` and `rustfmt` as needed. We don't use the `bindgen` plugin as we have to munge the output from bindgen extensively.
+
+
+## Known Issues
+
+* At this time, the wrapper will not compile on Windows due to the use of `pthread_mutex_t`. This is probably fixable.
+* [mbedtls] has extensive compile-time configuration options, and it's quite possible that a function we define isn't compiled in. The `config.h` we used is in `bindgen/include-fixes/config.h`
+
 
 [mbedtls-sys]: https://github.com/lemonrock/mbedtls-sys "mbedtls-sys GitHub page"
 [mbedtls]: https://tls.mbed.org/ "mbedtls home page"
