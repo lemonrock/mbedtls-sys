@@ -173,7 +173,7 @@ generate_macosx_main()
 		# 2 - remove multiline allow that (a) rustfmt can't format and (b) is no longer the first item in the file because of the use statements above and (c) is overly broad
 		# 3 to 7 - remove prefixes in favour of use statements above for readability
 		# 8 - suppress Copy warnings for empty enums which are types for opaque structs, format them (rustfmt can't)
-		# 9 - make uint128_t private and only exist on 64-bit unix platforms
+		# 9 - make u128 only exist on 64-bit unix platforms
 		# 10 - adjust mbedtls_t_udbl so that it is correctly sized on Windows and 32-bit unix (note that it is uint64_t even on 64-bit Windows)
 		# Second sed lines explanation - remove lines BEFORE expression:-
 		# 1 - remove #[derive(Debug)] from pub struct mbedtls_threading_mutex_t, as it contains a field of type pthread_mutex_t on Unix, which is opaque (via previous line sed expression)
