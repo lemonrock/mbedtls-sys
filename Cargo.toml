@@ -3,8 +3,8 @@
 
 [package]
 name = "mbedtls-sys"
-description = "A rust FFI wrapper around mbedtls"
-keywords = ["tls", "ssl", "dtls", "mbed", "mbedtls", "hash", "cryptography", "x509", "pki", "pkcs", "mbedtls-sys"]
+description = "A rust FFI wrapper around mbedtls which provides TLS, DTLS and generic crypto and hash functions"
+keywords = ["tls", "ssl", "dtls", "mbed", "mbedtls"]
 license = "MIT"
 authors = ["Raphael Cohn <raphael.cohn@stormmq.com>"]
 documentation = "https://github.com/lemonrock/mbedtls-sys/blob/master/README.md"
