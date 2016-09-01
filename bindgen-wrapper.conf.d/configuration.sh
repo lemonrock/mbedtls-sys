@@ -4,11 +4,12 @@
 
 bindingsName='mbedtls'
 rootIncludeFileName='ssl.h'
+link='mbedcrypto mbedx509 mbedtls'
 macosXHomebrewPackageName='mbedtls'
 alpineLinuxPackageName='mbedtls-dev'
 
 
-generate_binding_addTacFallbackIfNotPresent
+bindgen_wrapper_addTacFallbackIfNotPresent
 
 postprocess_after_generation()
 {	

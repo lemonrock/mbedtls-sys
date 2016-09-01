@@ -8,18 +8,3 @@ use self::libc::uint64_t;
 use self::libc::FILE;
 // Windows will have problems here
 use self::libc::pthread_mutex_t;
-
-#[link(name = "mbedcrypto")]
-extern "C"
-{
-}
-
-#[link(name = "mbedx509")]
-extern "C"
-{
-}
-
-#[link(name = "mbedtls")]
-extern "C"
-{
-}
