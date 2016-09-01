@@ -132,7 +132,7 @@ generate_bindings_macosxHomebrewInstall()
 	generate_bindings_ensureRequiredBinariesArePresent "To check for and, if necessary, install the brew package '$package'" brew grep
 	
 	# Sadly, this can not check --with-shared-libs
-	if brew list | -q grep; then
+	if brew list | grep -q "$package"; then
 		return 0
 	fi
 	
@@ -277,7 +277,7 @@ generate_bindings_sourceConfigurationThenExecute()
 	local functionToExecute="$1"
 	shift 1
 	
-	local configurationFolderPath="$homeFolder"/bindgen.conf.d
+	local configurationFolderPath="$homeFolder"/bindgen-wrapper.conf.d
 	local configurationFilePath="$configurationFolderPath"/configuration.sh
 	if [ ! -s "$configurationFilePath" ]; then
 		generate_bindings_fail "Configuration file '$configurationFilePath' is not present, not readable or empty"
@@ -290,9 +290,11 @@ generate_bindings_sourceConfigurationThenExecute()
 	local headersFolderPath=''
 	postprocess_after_generation()
 	{
+		:
 	}
 	postprocess_after_rustfmt()
 	{
+		:
 	}
 	. "$configurationFolderPath"/configuration.sh
 	

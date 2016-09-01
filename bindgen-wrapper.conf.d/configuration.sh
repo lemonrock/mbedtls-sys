@@ -8,10 +8,10 @@ macosXHomebrewPackageName='mbedtls'
 alpineLinuxPackageName='mbedtls-dev'
 
 
+generate_binding_addTacFallbackIfNotPresent
+
 postprocess_after_generation()
-{
-	generate_binding_addTacFallbackIfNotPresent
-	
+{	
 	local newline='\'$'\n'
 	
 	# First sed
