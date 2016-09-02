@@ -163,9 +163,7 @@ sed \
 doxygen doxygen/mbedtls.dash.doxyfile
 cd apidoc 1>/dev/null 2>/dev/null
 make
-cat com.kapeli.dash."$dashKeyword".docset/Contents/Info.plist
 sed -i '' -e 's/doxygen/'"$dashKeyword"'/g' com.kapeli.dash."$dashKeyword".docset/Contents/Info.plist
-cat com.kapeli.dash."$dashKeyword".docset/Contents/Info.plist
 mkdir -p ~/Library/Developer/Shared/Documentation/DocSets
 cp -R com.kapeli.dash."$dashKeyword".docset ~/Library/Developer/Shared/Documentation/DocSets
 cd - 1>/dev/null 2>/dev/null
