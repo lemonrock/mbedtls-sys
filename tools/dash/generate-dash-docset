@@ -1,0 +1,175 @@
+#!/usr/bin/env sh
+# This file is part of mbedtls-sys. It is subject to the license terms in the COPYRIGHT file found in the top-level directory of this distribution and at https://raw.githubusercontent.com/lemonrock/mbedtls-sys/master/COPYRIGHT. No part of mbedtls-sys, including this file, may be copied, modified, propagated, or distributed except according to the terms contained in the COPYRIGHT file.
+# Copyright © 2016 The developers of mbedtls-sys. See the COPYRIGHT file in the top-level directory of this distribution and at https://raw.githubusercontent.com/lemonrock/mbedtls-sys/master/COPYRIGHT.
+
+
+set -e
+set -u
+set -f
+
+_program_path_find()
+{
+    if [ "${_program_fattening_program_path+set}" = 'set' ]; then
+        printf '%s\n' "$_program_fattening_program_path"
+
+    elif [ "${0%/*}" = "$0" ]; then
+
+        # We've been invoked by the interpreter as, say, bash program
+        if [ -r "$0" ]; then
+            pwd -P
+        # Clutching at straws; probably run via a download, anonymous script, etc, weird execve, etc
+        else
+            printf '\n'
+        fi
+
+    else
+
+        # We've been invoked with a relative or absolute path (also when invoked via PATH in a shell)
+
+        _program_path_find_parentPath()
+        {
+            parentPath="${scriptPath%/*}"
+            if [ -z "$parentPath" ]; then
+                parentPath='/'
+            fi
+            cd "$parentPath" 1>/dev/null
+        }
+
+        # pdksh / mksh have problems with unsetting a variable that was never set...
+        if [ "${CDPATH+set}" = 'set' ]; then
+            unset CDPATH
+        fi
+
+        if command -v realpath 1>/dev/null 2>/dev/null; then
+            (
+                scriptPath="$(realpath "$0")"
+
+                _program_path_find_parentPath
+                pwd -P
+            )
+        elif command -v readlink 1>/dev/null 2>/dev/null; then
+            (
+                scriptPath="$0"
+
+                while [ -L "$scriptPath" ]
+                do
+                    _program_path_find_parentPath
+                    scriptPath="$(readlink "$scriptPath")"
+                done
+
+                _program_path_find_parentPath
+                pwd -P
+            )
+        else
+            # This approach will fail in corner cases where the script itself is a symlink in a path not parallel with the concrete script
+            (
+                scriptPath="$0"
+
+                _program_path_find_parentPath
+                pwd -P
+            )
+        fi
+
+    fi
+}
+
+_program_path="$(_program_path_find)"
+
+
+if ! command -v sed 1>/dev/null 2>/dev/null; then
+	printf '%s\n' "Could not locate sed in PATH" 1>&2
+	exit 1
+fi
+if ! command -v rm 1>/dev/null 2>/dev/null; then
+	printf '%s\n' "Could not locate rm in PATH" 1>&2
+	exit 1
+fi
+if ! command -v cp 1>/dev/null 2>/dev/null; then
+	printf '%s\n' "Could not locate cp in PATH" 1>&2
+	exit 1
+fi
+if ! command -v mkdir 1>/dev/null 2>/dev/null; then
+	printf '%s\n' "Could not locate mkdir in PATH" 1>&2
+	exit 1
+fi
+
+if ! command -v dot 1>/dev/null 2>/dev/null; then
+	
+	if ! command -v brew 1>/dev/null 2>/dev/null; then
+		printf '%s\n' "Could not locate Homebrew brew in PATH to install make" 1>&2
+		exit 1
+	fi
+
+	brew install graphviz
+	if ! command -v dot 1>/dev/null 2>/dev/null; then
+		printf '%s\n' "Could not locate make in PATH after brew install" 1>&2
+		exit 1
+	fi
+fi
+
+if ! command -v make 1>/dev/null 2>/dev/null; then
+	
+	if ! command -v brew 1>/dev/null 2>/dev/null; then
+		printf '%s\n' "Could not locate Homebrew brew in PATH to install make" 1>&2
+		exit 1
+	fi
+
+	brew install make
+	if ! command -v make 1>/dev/null 2>/dev/null; then
+		printf '%s\n' "Could not locate make in PATH after brew install" 1>&2
+		exit 1
+	fi
+fi
+
+if ! command -v perl 1>/dev/null 2>/dev/null; then
+	
+	if ! command -v brew 1>/dev/null 2>/dev/null; then
+		printf '%s\n' "Could not locate Homebrew brew in PATH to install perl" 1>&2
+		exit 1
+	fi
+
+	brew install perl
+	if ! command -v perl 1>/dev/null 2>/dev/null; then
+		printf '%s\n' "Could not locate perl in PATH after brew install" 1>&2
+		exit 1
+	fi
+fi
+
+if ! command -v doxygen 1>/dev/null 2>/dev/null; then
+	
+	if ! command -v brew 1>/dev/null 2>/dev/null; then
+		printf '%s\n' "Could not locate Homebrew brew in PATH to install doxygen" 1>&2
+		exit 1
+	fi
+
+	brew install doxygen
+	if ! command -v doxygen 1>/dev/null 2>/dev/null; then
+		printf '%s\n' "Could not locate doxygen in PATH after brew install" 1>&2
+		exit 1
+	fi
+	
+fi
+
+dashKeyword=mbedtls
+
+cd "$_program_path"/../../lib/mbedtls 1>/dev/null 2>/dev/null
+rm -rf ~/Library/Developer/Shared/Documentation/DocSets/com.kapeli.dash."$dashKeyword".docset
+rm -rf apidoc
+sed \
+	-e 's/GENERATE_DOCSET        = NO/GENERATE_DOCSET = YES/g' \
+	-e 's/DISABLE_INDEX          = NO/DISABLE_INDEX = YES/g' \
+	-e 's/DOCSET_BUNDLE_ID .*$/DOCSET_BUNDLE_ID = com.kapeli.dash.'"$dashKeyword"'/g' \
+	doxygen/mbedtls.doxyfile >doxygen/mbedtls.dash.doxyfile
+doxygen doxygen/mbedtls.dash.doxyfile
+cd apidoc 1>/dev/null 2>/dev/null
+make
+cat com.kapeli.dash."$dashKeyword".docset/Contents/Info.plist
+sed -i '' -e 's/doxygen/'"$dashKeyword"'/g' com.kapeli.dash."$dashKeyword".docset/Contents/Info.plist
+cat com.kapeli.dash."$dashKeyword".docset/Contents/Info.plist
+mkdir -p ~/Library/Developer/Shared/Documentation/DocSets
+cp -R com.kapeli.dash."$dashKeyword".docset ~/Library/Developer/Shared/Documentation/DocSets
+cd - 1>/dev/null 2>/dev/null
+rm -rf apidoc mbedtls.dash.doxyfile
+mkdir -p ~/Documents/DocSets
+rm -rf ~/Documents/DocSets/com.kapeli.dash."$dashKeyword".docset
+cp -R ~/Library/Developer/Shared/Documentation/DocSets/com.kapeli.dash."$dashKeyword".docset ~/Documents/DocSets

@@ -15,8 +15,11 @@ The license for this project is MIT.
 
 ## Recompilation
 
-To recompile, use `bindgen/generate-macosx`. This only works on Mac OS X, and you will need Homebrew installed (as `brew`). It assumes `brew` and `cargo` are in your path, and will install `bindgen` and `rustfmt` as needed. We don't use the `bindgen` plugin as we have to munge the output from bindgen extensively.
+To recompile, use `./bindgen-wrapper`. This only works on Mac OS X, and you will need Homebrew installed (as `brew`). It assumes `brew` and `cargo` are in your path, and will install `bindgen` and `rustfmt` as needed. We don't use the `bindgen` plugin as we have to munge the output from bindgen extensively.
 
+## Extras
+
+* Generating Mac OS X Developer docsets suitable for [dash] for [mbedtls] is supported. Just run `tools/generate-dash-docset`. The generated docset will be ` ~/Library/Developer/Shared/Documentation/DocSets/com.kapeli.dash.mbedtls.docset`. This may not be visible in [dash]'s file chooser.
 
 ## Known Issues
 

@@ -5,8 +5,9 @@
 bindingsName='mbedtls'
 rootIncludeFileName='ssl.h'
 link='mbedcrypto mbedx509 mbedtls'
-macosXHomebrewPackageName='mbedtls'
-alpineLinuxPackageName='mbedtls-dev'
+macosXHomebrewPackageNames=''
+alpineLinuxPackageNames=''
+headersFolderPath="$homeFolder"/lib/"$bindingsName"/include/"$bindingsName"
 
 
 bindgen_wrapper_addTacFallbackIfNotPresent

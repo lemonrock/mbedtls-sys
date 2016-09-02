@@ -4,3 +4,6 @@
 [submodule "tools/bindgen-wrapper"]
 	path = tools/bindgen-wrapper
 	url = https://github.com/lemonrock/bindgen-wrapper.git
+[submodule "lib/mbedtls"]
+	path = lib/mbedtls
+	url = https://github.com/ARMmbed/mbedtls.git
