@@ -1,0 +1,299 @@
+#!/usr/bin/env sh
+# This file is part of mbedtls. It is subject to the license terms in the COPYRIGHT file found in the top-level directory of this distribution and at https://raw.githubusercontent.com/lemonrock/mbedtls/master/COPYRIGHT. No part of mbedtls, including this file, may be copied, modified, propagated, or distributed except according to the terms contained in the COPYRIGHT file.
+# Copyright © 2016 The developers of mbedtls. See the COPYRIGHT file in the top-level directory of this distribution and at https://raw.githubusercontent.com/lemonrock/mbedtls/master/COPYRIGHT.
+
+
+set -e
+set -u
+set -f
+
+
+_program_path_find()
+{
+    if [ "${_program_fattening_program_path+set}" = 'set' ]; then
+        printf '%s\n' "$_program_fattening_program_path"
+
+    elif [ "${0%/*}" = "$0" ]; then
+
+        # We've been invoked by the interpreter as, say, bash program
+        if [ -r "$0" ]; then
+            pwd -P
+        # Clutching at straws; probably run via a download, anonymous script, etc, weird execve, etc
+        else
+            printf '\n'
+        fi
+
+    else
+
+        # We've been invoked with a relative or absolute path (also when invoked via PATH in a shell)
+
+        _program_path_find_parentPath()
+        {
+            parentPath="${scriptPath%/*}"
+            if [ -z "$parentPath" ]; then
+                parentPath='/'
+            fi
+            cd "$parentPath" 1>/dev/null
+        }
+
+        # pdksh / mksh have problems with unsetting a variable that was never set...
+        if [ "${CDPATH+set}" = 'set' ]; then
+            unset CDPATH
+        fi
+
+        if command -v realpath 1>/dev/null 2>/dev/null; then
+            (
+                scriptPath="$(realpath "$0")"
+
+                _program_path_find_parentPath
+                pwd -P
+            )
+        elif command -v readlink 1>/dev/null 2>/dev/null; then
+            (
+                scriptPath="$0"
+
+                while [ -L "$scriptPath" ]
+                do
+                    _program_path_find_parentPath
+                    scriptPath="$(readlink "$scriptPath")"
+                done
+
+                _program_path_find_parentPath
+                pwd -P
+            )
+        else
+            # This approach will fail in corner cases where the script itself is a symlink in a path not parallel with the concrete script
+            (
+                scriptPath="$0"
+
+                _program_path_find_parentPath
+                pwd -P
+            )
+        fi
+
+    fi
+}
+
+bindgen_wrapper_fail()
+{
+	local failureMessage="$1"
+	
+	printf '%s\n' "$failureMessage" 1>&2
+	exit 1
+}
+
+bindgen_wrapper_ensureRequiredBinariesArePresent()
+{
+	local reason="$1"
+	shift 1
+	
+	local binary
+	local missing=false
+	for binary in "$@"
+	do
+		if ! command -v "$binary" 1>/dev/null 2>/dev/null; then
+			printf '%s\n' "The binary '$binary' needs to be in the path" 1>&2
+			missing=true
+		fi
+	done
+	
+	if $missing; then
+		bindgen_wrapper_fail "Please make sure that the missing binaries are installed because '$reason'"
+	fi
+}
+
+bindgen_wrapper_macosxHomebrewInstall()
+{
+	local package="$1"
+	shift 1
+		
+	bindgen_wrapper_ensureRequiredBinariesArePresent "To check for and, if necessary, install the brew package '$package'" brew grep
+	
+	# Sadly, this can not check --with-shared-libs
+	if brew list | grep -q "$package"; then
+		return 0
+	fi
+	
+	brew install "$package" "$@"
+}
+
+bindgen_wrapper_runCorrode()
+{
+	cd "$_program_path"/corrode 1>/dev/null 2>/dev/null
+	
+		stack setup
+		stack update
+		stack build
+		stack exec -- corrode "$@"
+	
+	cd - 1>/dev/null 2>/dev/null
+}
+
+bindgen_wrapper_removeSystemHeaders()
+{
+	set +f
+	local cFilePath
+	for cFilePath in "$sourceFolderPath"/*.c "$headersIncludeFolderPath"/mbedtls/*.h
+	do
+		set -f
+		# Remove system headers
+		sed -i '' -e '/#include <.*>/d' "$cFilePath"
+	done
+	set -f
+}
+
+bindgen_wrapper_main()
+{
+	bindgen_wrapper_ensureRequiredBinariesArePresent "Required for operation" uname rm mkdir cp sed ln cat
+
+	local _program_path="$(_program_path_find)"
+	cd "$_program_path"/../.. 1>/dev/null 2>/dev/null
+		homeFolder="$(pwd -P)"
+	cd - 1>/dev/null 2>/dev/null
+	local platform="$(uname)"
+	
+	# Platform variations that can be overridden by configuration
+	case "$platform" in
+		
+		Darwin)
+			local prefix="$(brew --prefix)"
+			local llvmPrefix="$prefix"/opt/llvm
+			
+			bindgen_wrapper_macosxHomebrewInstall haskell-stack
+			bindgen_wrapper_macosxHomebrewInstall clang-format
+			bindgen_wrapper_macosxHomebrewInstall astyle
+		;;
+		
+		*)
+			local prefix='/usr'
+			local llvmPrefix="$prefix"
+			
+			bindgen_wrapper_ensureRequiredBinariesArePresent "haskell-stack" stack
+			bindgen_wrapper_ensureRequiredBinariesArePresent "clang-format" clang-format
+			bindgen_wrapper_ensureRequiredBinariesArePresent "Artistic Style" astyle
+		;;
+		
+	esac
+	
+	local temporaryFolderPath="$_program_path"/temporary
+	rm -rf "$temporaryFolderPath"
+	
+	local outputFolderPath="$temporaryFolderPath"/output
+	mkdir -m 0755 -p "$outputFolderPath"
+	
+	local headersIncludeFolderPath="$temporaryFolderPath"/include
+	mkdir -m 0755 -p "$headersIncludeFolderPath"
+	
+	local sourceFolderPath="$temporaryFolderPath"/source/mbedtls
+	mkdir -m 0755 -p "$sourceFolderPath"
+	
+	# We rely on bindgen-wrapper for now to generate a temporary folder containing header files suitable for us
+	"$homeFolder"/bindgen-wrapper
+	mkdir -m 0755 -p "$headersIncludeFolderPath"/mbedtls
+	cp -R "$homeFolder"/tools/bindgen-wrapper/temporary/. "$headersIncludeFolderPath"/mbedtls
+	cp -R "$homeFolder"/lib/mbedtls/library/. "$sourceFolderPath"
+	
+	# Make sure clang format can work properly
+	#ln -s "$_program_path"/clang-format.yaml "$sourceFolderPath"/.clang-format
+	ln -s "$_program_path"/clang-format.yaml "$outputFolderPath"/.clang-format
+	
+	bindgen_wrapper_removeSystemHeaders
+	
+	{
+		set +f
+		local cFilePath
+		
+		for cFilePath in "$sourceFolderPath"/*.c
+		do
+			set -f
+			local cFileName="${cFilePath##*/}"
+			local cFileBaseName="${cFileName%.*}"
+			
+			# Handle macro definition collisions and unwanted code
+			case "$cFileName" in
+				
+				x509_crl)
+					sed -e 's/BC/BC_X509_CRL/g' -e 's/BEFORE_COLON/BEFORE_COLON_X509_CRL/g' "$cFilePath"
+				;;
+				
+				x509_crt)
+					sed -e 's/BC/BC_X509_CRT/g' -e 's/BEFORE_COLON/BEFORE_COLON_X509_CRT/g' "$cFilePath"
+				;;
+				
+				x509_csr)
+					sed -e 's/BC/BC_X509_CSR/g' -e 's/BEFORE_COLON/BEFORE_COLON_X509_SR/g' "$cFilePath"
+				;;
+				
+				ctr_drbg)
+					sed -e 's/CHK/CHK_CTR/g' "$cFilePath"
+				;;
+				
+				hmac_drbg)
+					sed -e 's/CHK/CHK_HMAC/g' "$cFilePath"
+				;;
+				
+				# We don't want any of this code
+				arc4|md2|md4)
+					:
+				;;
+								
+				*)
+					cat "$cFilePath"
+				;;
+				
+			esac
+			
+		done
+		set -f
+	} >"$outputFolderPath"/combined.c
+	
+	grep '#define' "$outputFolderPath"/combined.c >"$outputFolderPath"/combined.macro-definitions.txt
+	
+	clang -E -P -fno-show-column -ftabstop=4 -I"$headersIncludeFolderPath" \
+		-DGET_UINT32_LE=GET_UINT32_LE -DPUT_UINT32_LE=PUT_UINT32_LE -DCHAR_BIT=8 -D_FILE_OFFSET_BITS=64 \
+	"$outputFolderPath"/combined.c >"$outputFolderPath"/clang-formatted.c
+	clang-format -i -style=file "$outputFolderPath"/clang-formatted.c
+	astyle --mode=c --suffix=none --style=allman --add-brackets --break-elseifs --break-closing-brackets --indent=force-tab=4 --remove-comment-prefix "$outputFolderPath"/clang-formatted.c
+	
+	# Convert some built-in c-types
+	sed \
+		-e 's/unsigned long long int /u64 /g' \
+		-e 's/unsigned long long /u64 /g' \
+		-e 's/unsigned long int /u32 /g' \
+		-e 's/unsigned long /u32 /g' \
+		-e 's/unsigned int /u32 /g' \
+		-e 's/unsigned short /u16 /g' \
+		-e 's/unsigned char /u8 /g' \
+		-e 's/unsigned /i32 /g' \
+		-e 's/signed long long int /i64 /g' \
+		-e 's/signed long long /i64 /g' \
+		-e 's/signed long int /i32 /g' \
+		-e 's/signed long /i32 /g' \
+		-e 's/signed int /u32 /g' \
+		-e 's/signed char /i8 /g' \
+		-e 's/signed /i32 /g' \
+		-e 's/long long int /i64 /g' \
+		-e 's/long long /i64 /g' \
+		-e 's/long /i32 /g' \
+		-e 's/int /i32 /g' \
+		-e 's/short /i16 /g' \
+		-e 's/char /i8 /g' \
+		"$outputFolderPath"/clang-formatted.c > "$outputFolderPath"/clang-formatted.typed.c
+	
+	# TODO: We've lost #define constant values for lots of things; we need to adjust this up-front
+	#       Change  #define MBEDTLS_ERR_  to something else
+	
+	# Extract one-line typedefs; remove  'typedef struct'  stuff
+	grep '^typedef .*;$' "$outputFolderPath"/clang-formatted.typed.c >"$outputFolderPath"/"$cFileBaseName".typedef.rs
+	grep -v '^typedef .*;$' "$outputFolderPath"/clang-formatted.typed.c >"$outputFolderPath"/"$cFileBaseName".sans-typedef.c
+	
+	# Need to strip function prototypes
+	
+	# Need to change -> to .
+	
+	# Need to convert types, especially built int types
+	
+	# Need to think about extern / static / extern static
+}
+
+bindgen_wrapper_main "$@"
